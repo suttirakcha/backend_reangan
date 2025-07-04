@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
 import createError from "../utils/create-error.util";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import prisma from "../config/prisma";
 import { ICreateUser, IUser } from "../types";
+import { generateToken } from "../services/auth.service";
 
 export const authMiddleware = async (
   req: Request<{}, {}, IUser>,
@@ -16,7 +17,7 @@ export const authMiddleware = async (
   }
 
   const token = headers.split(" ")[1];
-  const payload = jwt.verify(token!, process.env.JWT_SECRET!);
+  const payload: string | JwtPayload = jwt.verify(token!, process.env.JWT_SECRET!);
 
   const existedUser = await prisma.user.findUnique({
     where: { id: payload?.id },
@@ -25,6 +26,13 @@ export const authMiddleware = async (
   if (!existedUser) {
     throw createError(404, "User not found");
   }
+
+  // jwt.verify(token, process.env.JWT_SECRET!, (error: any, decode: any) => {
+  //   if (error) throw createError(401, "Invalid credentials");
+  //   if (Date.now() > (decode?.exp * 1000)){
+  //     generateToken(payload, "1d")
+  //   }
+  // })
 
   const { password, createdAt, updatedAt, ...userData } = existedUser;
   (req.user as ICreateUser) = userData;

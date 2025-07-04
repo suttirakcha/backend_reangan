@@ -1,18 +1,16 @@
 import type { Request, Response, NextFunction } from "express";
 import prisma from "../config/prisma";
 
-export const getAllLessons = async (
+export const getAllQuizzes = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const lessons = await prisma.lesson.findMany({
-    include: { quizzes: true }
-  })
-  res.json({ message: "Get the quizzes", lessons });
+  const quizzes = await prisma.quiz.findMany();
+  res.json({ message: "Get the quizzes", quizzes });
 };
 
-export const getCurrentLessons = async (
+export const getCurrentQuizzes = async (
   req: Request,
   res: Response,
   next: NextFunction
