@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
 import createError from "../utils/create-error.util";
 import jwt from "jsonwebtoken";
-import { createUser, getUser } from "../services/auth.service";
+import { createUser, generateAccessToken, generateRefreshToken, getUser } from "../services/auth.service";
 
 export const register = async (
   req: Request,
@@ -50,10 +50,12 @@ export const login = async (
     throw createError(400, "Password is incorrect");
   }
 
-  const token = jwt.sign(payload, process.env.JWT_SECRET!, {
-    algorithm: "HS256",
-    expiresIn: "30d",
-  });
+  const accessToken = generateAccessToken(payload);
+  const refreshToken = generateRefreshToken(payload);
 
-  res.json({ message: "Logged in successfully", result: payload, token });
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: false
+  }).json({ message: "Logged in successfully", result: payload, accessToken, refreshToken });
 };
