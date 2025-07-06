@@ -2,7 +2,12 @@ import type { Request, Response, NextFunction } from "express";
 import prisma from "../config/prisma";
 import createError from "../utils/create-error.util";
 import { getUser } from "../services/auth.service";
-import { getCourse, userEnrollCourse } from "../services/course.service";
+import {
+  findEnrolledCourse,
+  findLessonsFromEnrolledCourse,
+  getCourse,
+  userEnrollCourse,
+} from "../services/course.service";
 
 export const getAllCourses = async (
   req: Request,
@@ -15,7 +20,7 @@ export const getAllCourses = async (
       lessons: {
         omit: { courseId: true },
       },
-      enrolledCourse: true
+      enrolledCourse: true,
     },
   });
 
@@ -29,37 +34,17 @@ export const getAllCourses = async (
   res.json({ message: "Courses fetched", courses });
 };
 
-export const getCourseById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { id } = req.params;
-  const course = await prisma.course.findFirst({
-    where: { id: +id },
-    include: {
-      lessons: {
-        omit: { courseId: true },
-      },
-    },
-  });
-
-  if (!course) {
-    throw createError(404, "Course not found");
-  }
-
-  res.json({ message: "Courses fetched", course });
-};
-
 export const enrollCourse = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   const { id } = req.params;
-  const { username, email } = req.user;
+  const { id: userId } = req.user;
 
-  const user = await getUser(username, email);
+  const user = await prisma.user.findFirst({
+    where: { id: userId },
+  });
 
   if (!user) {
     throw createError(404, "User not found");
@@ -71,17 +56,15 @@ export const enrollCourse = async (
     throw createError(404, "Course not found");
   }
 
-  const findEnrolledCourse = await prisma.enrolledCourse.findFirst({
-    where: { userId: user?.id, courseId: course?.id },
-  });
+  const enrolledCourse = await findEnrolledCourse(userId, course?.id);
 
-  if (findEnrolledCourse?.courseId === course?.id) {
+  if (enrolledCourse?.courseId === course?.id) {
     throw createError(400, "Course already enrolled");
   }
 
-  const enrolled = await userEnrollCourse(user.id, course.id);
+  const result = await userEnrollCourse(user.id, course.id);
 
-  res.json({ message: "Enrolled the course", result: enrolled });
+  res.json({ message: "Course enrolled, let's have fun", result });
 };
 
 export const unenrollCourse = async (
@@ -90,15 +73,9 @@ export const unenrollCourse = async (
   next: NextFunction
 ) => {
   const { id } = req.params;
-  const { username } = req.user;
+  const { id: userId } = req.user;
 
-  const user = await prisma.user.findUnique({
-    where: { username },
-  });
-
-  const enrolledCourse = await prisma.enrolledCourse.findFirst({
-    where: { userId: user?.id, courseId: +id },
-  });
+  const enrolledCourse = await findEnrolledCourse(userId, +id);
 
   if (!enrolledCourse) {
     throw createError(400, "Course has not been enrolled yet");
@@ -108,7 +85,7 @@ export const unenrollCourse = async (
     where: enrolledCourse,
   });
 
-  res.json({ message: "Course unenrolled" });
+  res.json({ message: "You have unenrolled this course" });
 };
 
 export const getEnrolledCourses = async (
@@ -116,12 +93,22 @@ export const getEnrolledCourses = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { courseId } = req.enrolledCourse;
+  const { userId } = req.enrolledCourse;
   const courses = await prisma.course.findMany({
-    where: { id: courseId },
+    where: {
+      enrolledCourse: {
+        some: {
+          userId,
+        },
+      },
+    },
   });
 
-  res.json({ message: "Get enrolled courses", courses });
+  if (courses.length > 0){
+    res.json({ message: "Get enrolled courses", courses });
+  } else {
+    res.json({ message: "You have not enrolled any courses yet" });
+  }
 };
 
 export const getLessonFromCourse = async (
@@ -132,20 +119,16 @@ export const getLessonFromCourse = async (
   const { id } = req.params;
   const { userId } = req.enrolledCourse;
 
-  const enrolledCourse = await prisma.enrolledCourse.findFirst({
-    where: { courseId: +id }
-  })
-  const lessons = await prisma.lesson.findMany({
-    where: { courseId: +id },
+  const course = await prisma.course.findFirst({
+    where: { id: +id },
   });
 
-  if (enrolledCourse?.userId !== userId){
-    throw createError(401, "You have not enrolled this course yet");
+  if (!course) {
+    throw createError(404, "Course not found");
   }
 
-  if (!lessons) {
-    throw createError(400, "Cannot find the course you are looking for");
-  }
+  const { title, description } = course;
+  const lessons = await findLessonsFromEnrolledCourse(userId, +id);
 
-  res.json({ message: "Lessons fetched", lessons });
+  res.json({ message: "Lessons fetched", title, description, lessons });
 };
