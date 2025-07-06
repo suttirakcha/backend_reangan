@@ -24,11 +24,16 @@ export const createUser = async (
   });
 };
 
-export const generateToken = (payload: any, expiresIn?: string) => {
-  const token = jwt.sign(payload, process.env.JWT_SECRET!, {
+export const generateAccessToken = (payload: any) => {
+  return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET!, {
     algorithm: "HS256",
-    expiresIn: "5s",
+    expiresIn: "30d",
   });
+};
 
-  return token;
+export const generateRefreshToken = (payload: any) => {
+  return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET!, {
+    algorithm: "HS256",
+    expiresIn: "15d",
+  });
 };

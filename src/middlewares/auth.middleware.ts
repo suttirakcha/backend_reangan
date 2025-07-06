@@ -2,8 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import createError from "../utils/create-error.util";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import prisma from "../config/prisma";
-import { ICreateUser, IUser } from "../types";
-import { generateToken } from "../services/auth.service";
+import { ICreateUser, IPayload, IUser } from "../types";
 
 export const authMiddleware = async (
   req: Request<{}, {}, IUser>,
@@ -17,25 +16,15 @@ export const authMiddleware = async (
   }
 
   const token = headers.split(" ")[1];
-  const payload: string | JwtPayload = jwt.verify(token!, process.env.JWT_SECRET!);
 
-  const existedUser = await prisma.user.findUnique({
-    where: { id: payload?.id },
-  });
-
-  if (!existedUser) {
-    throw createError(404, "User not found");
+  if (!token){
+    throw createError(401, "Invalid token");
   }
 
-  // jwt.verify(token, process.env.JWT_SECRET!, (error: any, decode: any) => {
-  //   if (error) throw createError(401, "Invalid credentials");
-  //   if (Date.now() > (decode?.exp * 1000)){
-  //     generateToken(payload, "1d")
-  //   }
-  // })
-
-  const { password, createdAt, updatedAt, ...userData } = existedUser;
-  (req.user as ICreateUser) = userData;
+  jwt.verify(token!, process.env.ACCESS_TOKEN_SECRET!, (error: any, decode: any) => {
+    if (error) throw createError(401, "Invalid credentials");
+    req.user = decode
+  });
 
   next();
 };

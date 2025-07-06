@@ -12,19 +12,20 @@ export interface IUser extends ICreateUser {
   password: string;
   createdAt: string;
   updatedAt: string;
-  enrolledCourses: ICourse[]
+  enrolledCourses: ICourse[];
 }
 
 export interface ICourse {
   id: number;
   title: string;
   description: string | null;
+  enrolledCourses: ICourse[];
 }
 
 export interface IQuiz {
   id: number;
   title: string;
-  questions: IQuestion[]
+  questions: IQuestion[];
 }
 
 export interface IQuestion {
@@ -39,11 +40,19 @@ export interface IEnrolledCourse {
   courseId: number;
 }
 
+export interface IPayload {
+  id: number;
+  email: string;
+  username: string;
+  iat: number;
+  exp: number;
+}
+
 declare global {
   namespace Express {
     interface Request {
-      user: IUser,
-      enrolledCourse: IEnrolledCourse
+      user: IUser;
+      enrolledCourse: IEnrolledCourse;
     }
   }
 }
