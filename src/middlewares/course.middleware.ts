@@ -14,7 +14,8 @@ const courseMiddleware = async (
   });
 
   if (!enrolledCourse) {
-    throw createError(401, "You have not enrolled any courses yet");
+    res.json({ message: "You have not enrolled any courses yet" });
+    return;
   }
 
   (req.enrolledCourse as IEnrolledCourse | null) = enrolledCourse;
