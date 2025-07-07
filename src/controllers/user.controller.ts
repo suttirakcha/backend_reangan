@@ -1,12 +1,11 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import createError from "../utils/create-error.util";
 import bcrypt from "bcryptjs";
 
 export const getMe = async (
   req: Request,
-  res: Response,
-  next: NextFunction
+  res: Response
 ) => {
   const { id, username, email } = req.user;
   res.json({ message: "User found", result: { id, username, email } });
@@ -14,8 +13,7 @@ export const getMe = async (
 
 export const updateAccount = async (
   req: Request,
-  res: Response,
-  next: NextFunction
+  res: Response
 ) => {
   const userId = req.user?.id;
   if (!userId) {
@@ -51,7 +49,6 @@ export const updateAccount = async (
       throw createError(400, "Username or email already taken");
     }
   }
-  // console.log(user);
 
   const enteredPassword = current_password && new_password;
 
@@ -83,15 +80,12 @@ export const updateAccount = async (
     omit: { password: true },
   });
 
-  // console.log(result);
-
   res.json({ message: "Your account has been updated", result });
 };
 
 export const deleteAccount = async (
   req: Request,
-  res: Response,
-  next: NextFunction
+  res: Response
 ) => {
   const { id } = req.user;
   const user = await prisma.user.findUnique({

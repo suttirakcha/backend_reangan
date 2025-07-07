@@ -1,7 +1,6 @@
-import type { Request, Response, NextFunction } from "express";
+import type { Request, Response } from "express";
 import prisma from "../config/prisma";
 import createError from "../utils/create-error.util";
-import { getUser } from "../services/auth.service";
 import {
   findEnrolledCourse,
   findLessonsFromEnrolledCourse,
@@ -9,12 +8,7 @@ import {
   userEnrollCourse,
 } from "../services/course.service";
 
-export const getAllCourses = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { search } = req.params;
+export const getAllCourses = async (req: Request, res: Response) => {
   const courses = await prisma.course.findMany({
     include: {
       lessons: {
@@ -34,11 +28,7 @@ export const getAllCourses = async (
   res.json({ message: "Courses fetched", courses });
 };
 
-export const enrollCourse = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const enrollCourse = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { id: userId } = req.user;
 
@@ -67,11 +57,7 @@ export const enrollCourse = async (
   res.json({ message: "Course enrolled, let's have fun", result });
 };
 
-export const unenrollCourse = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const unenrollCourse = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { id: userId } = req.user;
 
@@ -85,14 +71,10 @@ export const unenrollCourse = async (
     where: enrolledCourse,
   });
 
-  res.json({ message: "You have unenrolled this course" });
+  res.json({ message: "Course unenrolled" });
 };
 
-export const getEnrolledCourses = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getEnrolledCourses = async (req: Request, res: Response) => {
   const { userId } = req.enrolledCourse;
   const courses = await prisma.course.findMany({
     where: {
@@ -104,18 +86,14 @@ export const getEnrolledCourses = async (
     },
   });
 
-  if (courses.length > 0){
-    res.json({ message: "Get enrolled courses", courses });
-  } else {
-    res.json({ message: "You have not enrolled any courses yet" });
+  if (!courses || courses.length === 0){
+    res.json({ message: "No courses enrolled" });
   }
+
+  res.json({ message: "Get enrolled courses", courses });
 };
 
-export const getLessonFromCourse = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getLessonFromCourse = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { userId } = req.enrolledCourse;
 
@@ -131,4 +109,27 @@ export const getLessonFromCourse = async (
   const lessons = await findLessonsFromEnrolledCourse(userId, +id);
 
   res.json({ message: "Lessons fetched", title, description, lessons });
+};
+
+// For admin side - may or may not do it
+export const getCourseById = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const course = await prisma.course.findFirst({
+    where: { id: +id },
+    include: {
+      lessons: {
+        omit: { courseId: true },
+      },
+      enrolledCourse: true,
+    },
+  });
+
+  if (!course) {
+    throw createError(
+      500,
+      "An error occurred while loading the courses. Please try again later."
+    );
+  }
+
+  res.json({ message: "Course fetched", course });
 };
