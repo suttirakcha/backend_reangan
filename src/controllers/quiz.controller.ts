@@ -1,24 +1,49 @@
-import type { Request, Response, NextFunction } from "express";
+import type { Request, Response } from "express";
 import prisma from "../config/prisma";
+import { fetchQuiz } from "../services/quiz.service";
 
-export const getAllQuizzes = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const quizzes = await prisma.quiz.findMany();
+export const getAllQuizzes = async (req: Request, res: Response) => {
+  const quizzes = await prisma.quiz.findMany({
+    include: { questions: true },
+    omit: { lessonId: true },
+  });
   res.json({ message: "Get the quizzes", quizzes });
 };
 
-export const getCurrentQuizzes = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getCurrentQuiz = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const quizzes = await prisma.quiz.findMany({
-    where: { lessonId: +id },
-  });
+  const quiz = await fetchQuiz(+id);
 
-  res.json({ message: "Get the quizzes", quizzes });
+  res.json({ message: "Get the quiz", lessonId: +id, quiz });
+};
+
+export const getFinishedQuizzes = async (req: Request, res: Response) => {
+  const finishedQuizzes = await prisma.finishedQuiz.findMany();
+
+  res.json({ message: "Found finished quizzes", finishedQuizzes })
+}
+
+export const completeQuiz = async (req: Request, res: Response) => {
+  const { courseId, lessonId, quizId } = req.params;
+  const { id: userId } = req.user;
+  const quiz = await fetchQuiz(+lessonId, +quizId);
+
+  const findFinishedQuiz = await prisma.finishedQuiz.findMany({
+    where: { userId, courseId: +courseId, quizId: +quizId }
+  })
+
+  if (findFinishedQuiz?.length > 0){
+    res.json({ message: "Already completed" });
+    return;
+  };
+
+  const completed = await prisma.finishedQuiz.create({
+    data: {
+      userId,
+      courseId: +courseId,
+      quizId: +quiz!.id
+    }
+  })
+
+  res.json({ message: "Quiz completed", completed })
 };

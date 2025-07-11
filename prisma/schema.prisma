@@ -29,6 +29,7 @@ model User {
   statistics     Statistics[]
   achievements   Achievement[]
   enrolledCourse EnrolledCourse[]
+  FinishedQuiz   FinishedQuiz[]
 
   @@map("users")
 }
@@ -51,6 +52,7 @@ model EnrolledCourse {
   course     Course   @relation(fields: [courseId], references: [id])
   courseId   Int
   enrolledAt DateTime @default(now()) @map("enrolled_at")
+  updatedAt  DateTime @updatedAt
 
   @@map("enrolled_courses")
 }
@@ -61,6 +63,7 @@ model Course {
   description    String?
   lessons        Lesson[]
   enrolledCourse EnrolledCourse[]
+  FinishedQuiz   FinishedQuiz[]
 
   @@map("courses")
 }
@@ -77,12 +80,24 @@ model Lesson {
 }
 
 model Quiz {
-  id        Int         @id @default(autoincrement())
-  title     String
-  questions Questions[]
-  lesson    Lesson      @relation(fields: [lessonId], references: [id])
-  lessonId  Int
-  reports   Report[]
+  id           Int            @id @default(autoincrement())
+  title        String
+  questions    Questions[]
+  lesson       Lesson         @relation(fields: [lessonId], references: [id])
+  lessonId     Int
+  reports      Report[]
+  finishedQuiz FinishedQuiz[]
+}
+
+model FinishedQuiz {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  course     Course   @relation(fields: [courseId], references: [id])
+  courseId   Int
+  quiz       Quiz     @relation(fields: [quizId], references: [id])
+  quizId     Int
+  finishedAt DateTime @default(now())
 }
 
 model Statistics {
@@ -97,11 +112,12 @@ model Statistics {
 }
 
 model Questions {
-  id             Int    @id @default(autoincrement())
+  id             Int     @id @default(autoincrement())
   question       String
   correct_answer String
-  quiz           Quiz   @relation(fields: [quizId], references: [id])
-  quizId         Int    @map("quiz_id")
+  choices        String?
+  quiz           Quiz    @relation(fields: [quizId], references: [id])
+  quizId         Int     @map("quiz_id")
 
   @@map("questions")
 }

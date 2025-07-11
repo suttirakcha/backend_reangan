@@ -1,6 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
 import prisma from "../config/prisma";
-import createError from "../utils/create-error.util";
 import { IEnrolledCourse } from "../types";
 
 const courseMiddleware = async (

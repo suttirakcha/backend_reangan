@@ -62,6 +62,9 @@ export const unenrollCourse = async (req: Request, res: Response) => {
   const { id: userId } = req.user;
 
   const enrolledCourse = await findEnrolledCourse(userId, +id);
+  const finishedQuiz = await prisma.finishedQuiz.findFirst({
+    where: { userId: +userId },
+  });
 
   if (!enrolledCourse) {
     throw createError(400, "Course has not been enrolled yet");
@@ -70,6 +73,15 @@ export const unenrollCourse = async (req: Request, res: Response) => {
   await prisma.enrolledCourse.delete({
     where: enrolledCourse,
   });
+
+  if (finishedQuiz) {
+    await prisma.finishedQuiz.deleteMany({
+      where: {
+        userId: +finishedQuiz?.userId,
+        courseId: +finishedQuiz?.courseId,
+      },
+    });
+  }
 
   res.json({ message: "Course unenrolled" });
 };
@@ -84,9 +96,16 @@ export const getEnrolledCourses = async (req: Request, res: Response) => {
         },
       },
     },
+    include: {
+      lessons: {
+        include: {
+          quizzes: true
+        }
+      }
+    }
   });
 
-  if (!courses || courses.length === 0){
+  if (!courses || courses.length === 0) {
     res.json({ message: "No courses enrolled" });
   }
 

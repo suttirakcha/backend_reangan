@@ -10,6 +10,8 @@ import userRouter from "./routes/user.route";
 import lessonRouter from "./routes/lesson.route";
 import createError from "./utils/create-error.util";
 import { generateAccessToken } from "./services/auth.service";
+import quizRouter from "./routes/quiz.route";
+import statRouter from "./routes/stat.route";
 
 const app = express();
 
@@ -25,7 +27,11 @@ app.use(cors({
 app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
 app.use('/api/courses', courseRouter);
-app.use('/api/lessons', lessonRouter)
+app.use('/api/lessons', lessonRouter);
+app.use('/api/quiz', quizRouter);
+app.use('/api/statistics', statRouter);
+
+// Todo: Refresh token route, will do later
 app.post('/refresh', (req: Request, res: Response) => {
   const token = req.cookies.refreshToken;
   if (!token) throw createError(401, "Invalid token");

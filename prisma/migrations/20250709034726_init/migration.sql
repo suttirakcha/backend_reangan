@@ -32,6 +32,7 @@ CREATE TABLE `enrolled_courses` (
     `userId` INTEGER NOT NULL,
     `courseId` INTEGER NOT NULL,
     `enrolled_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -65,6 +66,16 @@ CREATE TABLE `Quiz` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `FinishedQuiz` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `userId` INTEGER NOT NULL,
+    `quizId` INTEGER NOT NULL,
+    `finishedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `statistics` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `correct_answered` INTEGER NOT NULL,
@@ -80,6 +91,7 @@ CREATE TABLE `questions` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `question` VARCHAR(191) NOT NULL,
     `correct_answer` VARCHAR(191) NOT NULL,
+    `choices` VARCHAR(191) NULL,
     `quiz_id` INTEGER NOT NULL,
 
     PRIMARY KEY (`id`)
@@ -108,6 +120,12 @@ ALTER TABLE `lessons` ADD CONSTRAINT `lessons_course_id_fkey` FOREIGN KEY (`cour
 
 -- AddForeignKey
 ALTER TABLE `Quiz` ADD CONSTRAINT `Quiz_lessonId_fkey` FOREIGN KEY (`lessonId`) REFERENCES `lessons`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `FinishedQuiz` ADD CONSTRAINT `FinishedQuiz_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `FinishedQuiz` ADD CONSTRAINT `FinishedQuiz_quizId_fkey` FOREIGN KEY (`quizId`) REFERENCES `Quiz`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `statistics` ADD CONSTRAINT `statistics_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
