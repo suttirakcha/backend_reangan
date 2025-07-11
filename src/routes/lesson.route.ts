@@ -6,6 +6,7 @@ import { getAllLessons, getCurrentLessons } from "../controllers/lesson.controll
 
 const lessonRouter = Router();
 
+// For admins
 lessonRouter.get("/", authMiddleware, getAllLessons);
 lessonRouter.get("/:id", authMiddleware, getCurrentLessons);
 

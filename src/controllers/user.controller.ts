@@ -3,18 +3,12 @@ import prisma from "../config/prisma";
 import createError from "../utils/create-error.util";
 import bcrypt from "bcryptjs";
 
-export const getMe = async (
-  req: Request,
-  res: Response
-) => {
+export const getMe = async (req: Request, res: Response) => {
   const { id, username, email } = req.user;
   res.json({ message: "User found", result: { id, username, email } });
 };
 
-export const updateAccount = async (
-  req: Request,
-  res: Response
-) => {
+export const updateAccount = async (req: Request, res: Response) => {
   const userId = req.user?.id;
   if (!userId) {
     throw createError(400, "User unauthenticated");
@@ -83,10 +77,7 @@ export const updateAccount = async (
   res.json({ message: "Your account has been updated", result });
 };
 
-export const deleteAccount = async (
-  req: Request,
-  res: Response
-) => {
+export const deleteAccount = async (req: Request, res: Response) => {
   const { id } = req.user;
   const user = await prisma.user.findUnique({
     where: { id },
@@ -96,11 +87,9 @@ export const deleteAccount = async (
     throw createError(400, "Invalid user");
   }
 
-  if (user.id === id) {
-    await prisma.user.delete({
-      where: { id },
-    });
-  }
+  await prisma.user.delete({
+    where: { id },
+  });
 
   res.json({ message: "Your account has been deleted" });
 };
