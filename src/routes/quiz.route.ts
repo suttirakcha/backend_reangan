@@ -6,8 +6,11 @@ import courseMiddleware from "../middlewares/course.middleware";
 
 const quizRouter = Router();
 
-quizRouter.get("/", authMiddleware, courseMiddleware, getAllQuizzes);
-// quizRouter.get("/:id", authMiddleware, courseMiddleware, getCurrentQuiz);
+// For users
+// quizRouter.get("/", authMiddleware, courseMiddleware, getAllQuizzes);
 quizRouter.get("/finished", authMiddleware, getFinishedQuizzes)
+
+// For admins
+// quizRouter.get("/:id", authMiddleware, courseMiddleware, getCurrentQuiz);
 
 export default quizRouter;

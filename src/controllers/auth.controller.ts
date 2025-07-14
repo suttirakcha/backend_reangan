@@ -9,6 +9,7 @@ import {
   getUser,
 } from "../services/auth.service";
 import prisma from "../config/prisma";
+import sendEmail from "../utils/send-mail.util";
 
 export const register = async (req: Request, res: Response) => {
   const { username, email, password } = req.body;
@@ -85,9 +86,13 @@ export const forgotPassword = async (req: Request, res: Response) => {
     }
   );
 
+  // const mainUrl = `${req.protocol}://${req.get('host')}/reset-password/${resetPasswordToken}`;
+  const mainUrl = `${req.protocol}://localhost:5173/reset-password/${resetPasswordToken}`;
+  sendEmail(email, mainUrl);
+
   res.json({
     message: "Request has sent to reset password",
-    resetPasswordToken,
+    resetPasswordToken
   });
 };
 
@@ -95,8 +100,15 @@ export const resetPassword = async (req: Request, res: Response) => {
   const { token } = req.params;
   const { password } = req.body;
 
+  const occurError = () => {
+    throw createError(
+      400,
+      "An error occurred while trying to reset password, please try again."
+    );
+  };
+
   if (!token) {
-    throw createError(400, "An error occurred while trying to reset password, please try again.");
+    occurError();
   }
 
   const verifyToken = jwt.verify(token!, process.env.RESET_PASSWORD_SECRET!, {
@@ -104,22 +116,22 @@ export const resetPassword = async (req: Request, res: Response) => {
   });
 
   if (!verifyToken) {
-    throw createError(400, "An error occurred while trying to reset password, please try again.");
+    occurError();
   }
 
   const decoded = jwt.decode(token!);
   const hashPassword = await bcrypt.hash(password, 10);
 
-  if (!decoded){
-    throw createError(400, "An error occurred while trying to reset password, please try again.")
+  if (decoded && typeof decoded === "object" && "id" in decoded) {
+    await prisma.user.update({
+      where: { id: decoded?.id },
+      data: {
+        password: hashPassword,
+      },
+    });
+  } else {
+    occurError();
   }
-
-  await prisma.user.update({
-    where: { id: decoded?.id },
-    data: {
-      password: hashPassword,
-    },
-  });
 
   res.json({ message: "Successfully reset password", password: hashPassword });
 };

@@ -39,7 +39,7 @@ export const findLessonsFromEnrolledCourse = async (
     where: { courseId },
     include: { quizzes: {
       omit: { lessonId: true }
-    } }
+    }}
   });
 
   if (enrolledCourse?.userId !== userId) {

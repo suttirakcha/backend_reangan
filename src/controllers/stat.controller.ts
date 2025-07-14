@@ -24,13 +24,24 @@ export const getStatistics = async (req: Request, res: Response) => {
 
 export const createStatistics = async (req: Request, res: Response) => {
   const { id } = req.user;
+  const { exp, correct_answered, incorrect_answered } = req.body;
+  const user = await getUserById(+id);
+
+  const findStat = await prisma.statistics.findFirst({
+    where: { userId: user?.id }
+  })
+
+  if (findStat){
+    res.json({ message: "Statistics already exists" });
+    return;
+  }
 
   const initialStat = await prisma.statistics.create({
     data: {
-      userId: id,
-      correct_answered: 0,
-      incorrect_answered: 0,
-      exp: 0,
+      userId: +id,
+      correct_answered,
+      incorrect_answered,
+      exp,
     },
   });
 
@@ -40,11 +51,20 @@ export const createStatistics = async (req: Request, res: Response) => {
 export const updateStatistics = async (req: Request, res: Response) => {
   const { id } = req.user;
   const { exp, correct_answered, incorrect_answered } = req.body;
+  
+  const user = await getUserById(+id);
+  const findStat = await prisma.statistics.findFirst({
+    where: { userId: user?.id }
+  })
+
+  if (!findStat){
+    throw createError(404, "Stat not found")
+  }
 
   const statData = await prisma.statistics.update({
-    where: { id },
+    where: { id: findStat?.id },
     data: {
-      userId: id,
+      userId: user?.id,
       correct_answered,
       incorrect_answered,
       exp

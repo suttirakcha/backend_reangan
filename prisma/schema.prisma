@@ -18,6 +18,11 @@ enum Role {
   ADMIN
 }
 
+enum QuestionType {
+  typing
+  multiple_choice
+}
+
 model User {
   id             Int              @id @default(autoincrement())
   username       String           @unique
@@ -52,7 +57,6 @@ model EnrolledCourse {
   course     Course   @relation(fields: [courseId], references: [id])
   courseId   Int
   enrolledAt DateTime @default(now()) @map("enrolled_at")
-  updatedAt  DateTime @updatedAt
 
   @@map("enrolled_courses")
 }
@@ -91,7 +95,7 @@ model Quiz {
 
 model FinishedQuiz {
   id         Int      @id @default(autoincrement())
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
   course     Course   @relation(fields: [courseId], references: [id])
   courseId   Int
@@ -105,19 +109,20 @@ model Statistics {
   correct_answered   Int
   incorrect_answered Int
   exp                Int
-  user               User @relation(fields: [userId], references: [id])
+  user               User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId             Int  @map("user_id")
 
   @@map("statistics")
 }
 
 model Questions {
-  id             Int     @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
   question       String
   correct_answer String
   choices        String?
-  quiz           Quiz    @relation(fields: [quizId], references: [id])
-  quizId         Int     @map("quiz_id")
+  question_type  QuestionType @default(multiple_choice)
+  quiz           Quiz         @relation(fields: [quizId], references: [id])
+  quizId         Int          @map("quiz_id")
 
   @@map("questions")
 }

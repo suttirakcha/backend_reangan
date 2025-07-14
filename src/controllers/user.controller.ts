@@ -46,7 +46,6 @@ export const updateAccount = async (req: Request, res: Response) => {
 
   const enteredPassword = current_password && new_password;
 
-  // TODO: Will add the feature to change password
   if (enteredPassword) {
     const checkOldPassword = await bcrypt.compare(
       current_password,

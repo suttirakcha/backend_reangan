@@ -9,6 +9,7 @@ export interface ICreateUser {
 }
 
 export interface IUser extends ICreateUser {
+  role: string;
   password: string;
   createdAt: string;
   updatedAt: string;
@@ -38,6 +39,7 @@ export interface IEnrolledCourse {
   id: number;
   userId: number;
   courseId: number;
+  enrolledAt: Date;
 }
 
 export interface IPayload {

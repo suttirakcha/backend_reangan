@@ -63,7 +63,7 @@ export const unenrollCourse = async (req: Request, res: Response) => {
 
   const enrolledCourse = await findEnrolledCourse(userId, +id);
   const finishedQuiz = await prisma.finishedQuiz.findFirst({
-    where: { userId: +userId },
+    where: { userId: +userId, courseId: +id },
   });
 
   if (!enrolledCourse) {
@@ -92,7 +92,7 @@ export const getEnrolledCourses = async (req: Request, res: Response) => {
     where: {
       enrolledCourse: {
         some: {
-          userId,
+          userId
         },
       },
     },
@@ -101,7 +101,7 @@ export const getEnrolledCourses = async (req: Request, res: Response) => {
         include: {
           quizzes: true
         }
-      }
+      },
     }
   });
 
@@ -152,3 +152,21 @@ export const getCourseById = async (req: Request, res: Response) => {
 
   res.json({ message: "Course fetched", course });
 };
+
+export const createCourse = async (req: Request, res: Response) => {
+  const { title, description } = req.body;
+
+  if (!title){
+    throw createError(400, "Title is required");
+  }
+
+  const course = await prisma.course.create({
+    data: { title, description }
+  })
+
+  if (!course){
+    throw createError(400, "Failed to create a course");
+  }
+
+  res.json({ message: "Course created", course })
+}

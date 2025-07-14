@@ -2,7 +2,9 @@ import type { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { fetchQuiz } from "../services/quiz.service";
 
+// For users
 export const getAllQuizzes = async (req: Request, res: Response) => {
+  const { courseId, lessonId } = req.params;
   const quizzes = await prisma.quiz.findMany({
     include: { questions: true },
     omit: { lessonId: true },

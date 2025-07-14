@@ -69,6 +69,7 @@ CREATE TABLE `Quiz` (
 CREATE TABLE `FinishedQuiz` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `userId` INTEGER NOT NULL,
+    `courseId` INTEGER NOT NULL,
     `quizId` INTEGER NOT NULL,
     `finishedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
@@ -92,6 +93,7 @@ CREATE TABLE `questions` (
     `question` VARCHAR(191) NOT NULL,
     `correct_answer` VARCHAR(191) NOT NULL,
     `choices` VARCHAR(191) NULL,
+    `question_type` ENUM('typing', 'multiple_choice') NOT NULL DEFAULT 'multiple_choice',
     `quiz_id` INTEGER NOT NULL,
 
     PRIMARY KEY (`id`)
@@ -122,13 +124,16 @@ ALTER TABLE `lessons` ADD CONSTRAINT `lessons_course_id_fkey` FOREIGN KEY (`cour
 ALTER TABLE `Quiz` ADD CONSTRAINT `Quiz_lessonId_fkey` FOREIGN KEY (`lessonId`) REFERENCES `lessons`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `FinishedQuiz` ADD CONSTRAINT `FinishedQuiz_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `FinishedQuiz` ADD CONSTRAINT `FinishedQuiz_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `FinishedQuiz` ADD CONSTRAINT `FinishedQuiz_courseId_fkey` FOREIGN KEY (`courseId`) REFERENCES `courses`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `FinishedQuiz` ADD CONSTRAINT `FinishedQuiz_quizId_fkey` FOREIGN KEY (`quizId`) REFERENCES `Quiz`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `statistics` ADD CONSTRAINT `statistics_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `statistics` ADD CONSTRAINT `statistics_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `questions` ADD CONSTRAINT `questions_quiz_id_fkey` FOREIGN KEY (`quiz_id`) REFERENCES `Quiz`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
