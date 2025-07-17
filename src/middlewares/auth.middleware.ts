@@ -30,7 +30,7 @@ export const authMiddleware = async (
       const user = await prisma.user.findUnique({ where: { id: decode.id } });
       if (!user) throw createError(404, "User not found");
 
-      req.user = decode;
+      req.user = { ...decode, role: user?.role };
       next();
     }
   );

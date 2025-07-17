@@ -4,8 +4,8 @@ import createError from "../utils/create-error.util";
 import bcrypt from "bcryptjs";
 
 export const getMe = async (req: Request, res: Response) => {
-  const { id, username, email } = req.user;
-  res.json({ message: "User found", result: { id, username, email } });
+  const { id, username, email, role } = req.user;
+  res.json({ message: "User found", result: { id, username, email, role } });
 };
 
 export const updateAccount = async (req: Request, res: Response) => {

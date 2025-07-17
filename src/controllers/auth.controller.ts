@@ -43,6 +43,7 @@ export const login = async (req: Request, res: Response) => {
     id: user?.id,
     email: user?.email,
     username: user?.username,
+    role: user?.role
   };
 
   if (!comparePassword) {

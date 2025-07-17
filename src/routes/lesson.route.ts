@@ -1,13 +1,15 @@
 import { Router } from "express";
-import courseMiddleware from "../middlewares/course.middleware";
 
 import { authMiddleware } from "../middlewares/auth.middleware";
-import { fetchLessonById, fetchLessons } from "../controllers/lesson.controller";
+import { fetchLessonById, createLesson, getAllLessons, updateLesson, deleteLesson } from "../controllers/lesson.controller";
 
 const lessonRouter = Router();
 
 // For admins
-lessonRouter.get("/", authMiddleware, fetchLessons);
+lessonRouter.get("/", authMiddleware, getAllLessons)
 lessonRouter.get("/:id", authMiddleware, fetchLessonById);
+lessonRouter.post("/", authMiddleware, createLesson);
+lessonRouter.patch("/:id", authMiddleware, updateLesson);
+lessonRouter.delete("/:id", authMiddleware, deleteLesson);
 
 export default lessonRouter;

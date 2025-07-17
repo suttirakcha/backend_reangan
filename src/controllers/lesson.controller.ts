@@ -5,7 +5,7 @@ import createError from "../utils/create-error.util";
 // For users
 export const getAllLessons = async (req: Request, res: Response) => {
   const lessons = await prisma.lesson.findMany({
-    include: { quizzes: true },
+    include: { quizzes: { include: { questions: true } } },
   });
   res.json({ message: "Get the lesson", lessons });
 };
@@ -25,13 +25,14 @@ export const getCurrentLesson = async (req: Request, res: Response) => {
 };
 
 // For admins
-export const fetchLessons = async (req: Request, res: Response) => {
-  const lessons = await prisma.lesson.findMany();
-  res.json({ message: "Lessons fetched", lessons });
-};
-
 export const fetchLessonById = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const { role } = req.user;
+
+  if (role !== "ADMIN") {
+    throw createError(403, "Only admins can access this lesson");
+  }
+
   const lesson = await prisma.lesson.findFirst({
     where: { id: +id },
   });
@@ -39,18 +40,78 @@ export const fetchLessonById = async (req: Request, res: Response) => {
 };
 
 export const createLesson = async (req: Request, res: Response) => {
-  const { title, description, course } = req.body;
+  const { title, description, courseId } = req.body;
+  const { role } = req.user;
 
-  if (!title){
+  if (role !== "ADMIN") {
+    throw createError(403, "Only admins can create the lessons");
+  }
+
+  if (!title) {
     throw createError(400, "Title is required");
   }
 
   const lesson = await prisma.lesson.create({
     data: {
-      title, 
+      title,
       description,
-      course
-    }
+      courseId,
+    },
   });
-  res.json({ message: "Lesson fetched", lesson });
+  res.json({ message: "Lesson created", lesson });
+};
+
+export const updateLesson = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { title, description, courseId } = req.body;
+  const { role } = req.user;
+
+  if (role !== "ADMIN") {
+    throw createError(403, "Only admins can create the lessons");
+  }
+
+  if (!title) {
+    throw createError(400, "Title is required");
+  }
+
+  const findLesson = await prisma.lesson.findFirst({
+    where: { id: +id },
+  });
+
+  if (!findLesson) {
+    throw createError(400, "Failed to update a course");
+  }
+
+  const lesson = await prisma.lesson.update({
+    where: { id: findLesson?.id },
+    data: {
+      title,
+      description,
+      courseId,
+    },
+  });
+  res.json({ message: "Lesson updated", lesson });
+};
+
+export const deleteLesson = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { role } = req.user;
+
+  if (role !== "ADMIN") {
+    throw createError(403, "Only admins can create the lessons");
+  }
+
+  const findLesson = await prisma.lesson.findFirst({
+    where: { id: +id },
+  });
+
+  if (!findLesson) {
+    throw createError(400, "Failed to update a course");
+  }
+
+  await prisma.lesson.delete({
+    where: { id: findLesson?.id },
+  });
+
+  res.json({ message: "Lesson fetched" });
 };

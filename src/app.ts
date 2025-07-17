@@ -12,6 +12,7 @@ import createError from "./utils/create-error.util";
 import { generateAccessToken } from "./services/auth.service";
 import quizRouter from "./routes/quiz.route";
 import statRouter from "./routes/stat.route";
+import reportRouter from "./routes/report.route";
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/courses', courseRouter);
 app.use('/api/lessons', lessonRouter);
 app.use('/api/quiz', quizRouter);
 app.use('/api/statistics', statRouter);
+app.use('/api/reports', reportRouter);
 
 // Todo: Refresh token route, will do later
 app.post('/refresh', (req: Request, res: Response) => {

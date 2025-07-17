@@ -45,7 +45,6 @@ model Report {
   quizId     Int
   issue      String
   detail     String
-  screenshot String?
   createdAt  DateTime @default(now()) @map("created_at")
   isResolved Boolean  @default(false)
 }
@@ -54,7 +53,7 @@ model EnrolledCourse {
   id         Int      @id @default(autoincrement())
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
-  course     Course   @relation(fields: [courseId], references: [id])
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   courseId   Int
   enrolledAt DateTime @default(now()) @map("enrolled_at")
 

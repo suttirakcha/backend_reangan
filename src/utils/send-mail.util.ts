@@ -7,7 +7,13 @@ const sendEmail = (email: string, link: string) => {
       to: email,
       subject: "Request for resetting password",
       text: "Thank you for your response", // plain‑text body
-      html: `<a href="${link}">Click here to reset password</a>`, // HTML body
+      html: `
+        <div>
+          <h2>Hello from ReanGan</h2>
+          <p>You have submitted the request to reset your password. If this wasn't you, you can ignore this email.</p>
+          <a href="${link}">Click here to reset password</a>
+        </div>
+      `, // HTML body
     });
 
     console.log("Message sent:", info.messageId);
