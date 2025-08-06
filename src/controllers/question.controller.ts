@@ -5,14 +5,14 @@ import createError from "../utils/create-error.util";
 
 export const createQuestion = async (req: Request, res: Response) => {
   const { role } = req.user;
-  const { question, correct_answer, choices, quizId } = req.body;
+  const { question, correct_answer, question_type, choices, quizId } = req.body;
 
   if (role !== "ADMIN") {
     throw createError(403, "Only admins can create the quiz");
   }
 
   const createdQuestion = await prisma.questions.create({
-    data: { question, correct_answer, choices, quizId },
+    data: { question, correct_answer, question_type, choices, quizId },
   });
 
   res.json({ message: "Question created", question: createdQuestion });
@@ -21,7 +21,7 @@ export const createQuestion = async (req: Request, res: Response) => {
 export const updateQuestion = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { role } = req.user;
-  const { question, correct_answer, choices, quizId } = req.body;
+  const { question, correct_answer, question_type, choices, quizId } = req.body;
 
   if (role !== "ADMIN") {
     throw createError(403, "Only admins can create the quiz");
@@ -37,7 +37,7 @@ export const updateQuestion = async (req: Request, res: Response) => {
 
   const updatedQuestion = await prisma.questions.update({
     where: { id: findQuestion?.id },
-    data: { question, correct_answer, choices, quizId },
+    data: { question, correct_answer, question_type, choices, quizId },
   });
 
   res.json({ message: "Question updated", question: updatedQuestion });
