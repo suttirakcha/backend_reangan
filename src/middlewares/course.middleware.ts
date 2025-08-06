@@ -8,6 +8,7 @@ const courseMiddleware = async (
   next: NextFunction
 ) => {
   const { id } = req.user;
+  console.log(req.user);
   const enrolledCourse = await prisma.enrolledCourse.findFirst({
     where: { userId: +id }
   });

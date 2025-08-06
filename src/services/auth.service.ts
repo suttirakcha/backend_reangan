@@ -30,16 +30,16 @@ export const createUser = async (
   });
 };
 
-export const generateAccessToken = (payload: any) => {
-  return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET!, {
+export const generateAccessToken = (payload: unknown) => {
+  return jwt.sign(payload!, process.env.ACCESS_TOKEN_SECRET!, {
     algorithm: "HS256",
-    expiresIn: "30d",
+    expiresIn: "15m", // Will set to approx. 10-15 mins to avoid hackers that try to steal the token
   });
 };
 
-export const generateRefreshToken = (payload: any) => {
-  return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET!, {
+export const generateRefreshToken = (payload: unknown) => {
+  return jwt.sign(payload!, process.env.REFRESH_TOKEN_SECRET!, {
     algorithm: "HS256",
-    expiresIn: "15d",
+    expiresIn: "30d", // Will set to 15-30 days and the system will send the new accessToken for every 15-30 days
   });
 };

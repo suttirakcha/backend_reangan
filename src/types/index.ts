@@ -1,4 +1,4 @@
-import { JwtPayload } from "jsonwebtoken";
+import { type JwtPayload } from "jsonwebtoken";
 
 export type ErrorType = Error & { statusCode?: number };
 
@@ -9,6 +9,7 @@ export interface ICreateUser {
 }
 
 export interface IUser extends ICreateUser {
+  userId?: number;
   role: string;
   password: string;
   createdAt: string;
@@ -57,4 +58,11 @@ declare global {
       enrolledCourse: IEnrolledCourse;
     }
   }
+}
+
+export type GoogleUser = {
+  id: string;
+  email: string;
+  name: string;
+  picture: string;
 }

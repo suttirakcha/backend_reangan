@@ -35,13 +35,25 @@ model User {
   achievements   Achievement[]
   enrolledCourse EnrolledCourse[]
   FinishedQuiz   FinishedQuiz[]
+  RefreshToken   RefreshToken[]
 
   @@map("users")
 }
 
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique @db.VarChar(255)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+}
+
 model Report {
   id         Int      @id @default(autoincrement())
-  quiz       Quiz     @relation(fields: [quizId], references: [id])
+  quiz       Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
   quizId     Int
   issue      String
   detail     String
@@ -75,7 +87,7 @@ model Lesson {
   id          Int     @id @default(autoincrement())
   title       String
   description String?
-  course      Course  @relation(fields: [courseId], references: [id])
+  course      Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   courseId    Int     @map("course_id")
   quizzes     Quiz[]
 
@@ -86,7 +98,7 @@ model Quiz {
   id           Int            @id @default(autoincrement())
   title        String
   questions    Questions[]
-  lesson       Lesson         @relation(fields: [lessonId], references: [id])
+  lesson       Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   lessonId     Int
   reports      Report[]
   finishedQuiz FinishedQuiz[]
@@ -96,9 +108,9 @@ model FinishedQuiz {
   id         Int      @id @default(autoincrement())
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
-  course     Course   @relation(fields: [courseId], references: [id])
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   courseId   Int
-  quiz       Quiz     @relation(fields: [quizId], references: [id])
+  quiz       Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
   quizId     Int
   finishedAt DateTime @default(now())
 }
@@ -120,7 +132,7 @@ model Questions {
   correct_answer String
   choices        String?
   question_type  QuestionType @default(multiple_choice)
-  quiz           Quiz         @relation(fields: [quizId], references: [id])
+  quiz           Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
   quizId         Int          @map("quiz_id")
 
   @@map("questions")
@@ -129,6 +141,6 @@ model Questions {
 model Achievement {
   id     Int    @id @default(autoincrement())
   title  String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int
 }

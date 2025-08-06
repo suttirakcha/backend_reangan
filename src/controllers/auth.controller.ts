@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import createError from "../utils/create-error.util";
 import jwt, { JwtPayload } from "jsonwebtoken";
@@ -43,7 +43,7 @@ export const login = async (req: Request, res: Response) => {
     id: user?.id,
     email: user?.email,
     username: user?.username,
-    role: user?.role
+    role: user?.role,
   };
 
   if (!comparePassword) {
@@ -53,18 +53,26 @@ export const login = async (req: Request, res: Response) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
 
-  res
-    .cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: false,
-    })
-    .json({
-      message: "Logged in successfully",
-      result: payload,
-      accessToken,
-      refreshToken,
-    });
+  await prisma.refreshToken.create({
+    data: {
+      token: refreshToken,
+      userId: user?.id,
+      expiresAt: new Date(Date.now() + 60 * 1000), // 60 seconds = 1 minute
+    },
+  });
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: false, // Set to 'true' in production
+    maxAge: 60 * 24 * 60 * 60 * 1000, // 60 days
+  });
+
+  res.json({
+    message: "Logged in successfully",
+    result: payload,
+    accessToken,
+  });
 };
 
 export const forgotPassword = async (req: Request, res: Response) => {
@@ -87,13 +95,13 @@ export const forgotPassword = async (req: Request, res: Response) => {
     }
   );
 
-  // const mainUrl = `${req.protocol}://${req.get('host')}/reset-password/${resetPasswordToken}`;
-  const mainUrl = `${req.protocol}://localhost:5173/reset-password/${resetPasswordToken}`;
+  // const mainUrl = `${req.protocol}://${req.get('host')}/reset-password/${resetPasswordToken}`; // For production
+  const mainUrl = `${req.protocol}://localhost:5173/reset-password/${resetPasswordToken}`; // For development
   sendEmail(email, mainUrl);
 
   res.json({
     message: "Request has sent to reset password",
-    resetPasswordToken
+    resetPasswordToken,
   });
 };
 
@@ -135,4 +143,74 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 
   res.json({ message: "Successfully reset password", password: hashPassword });
+};
+
+export const authRefreshToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const oldToken = req.cookies.refreshToken;
+    if (!oldToken) {
+      res.status(401).json({ message: "No refresh token provided" });
+      return;
+    }
+
+    const findOldToken = await prisma.refreshToken.findFirst({
+      where: { token: oldToken },
+    });
+
+    if (!findOldToken) {
+      res.status(401).json({ message: "Refresh token not found" });
+      return;
+    }
+
+    if (new Date() > findOldToken.expiresAt) {
+      res.status(401).json({ message: "Refresh token expired" });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: findOldToken.userId },
+    });
+
+    const newAccessToken = generateAccessToken({
+      id: user?.id,
+      username: user?.username,
+      email: user?.email,
+      role: user?.role
+    });
+
+    const newRefreshToken = generateRefreshToken({
+      userId: findOldToken?.userId,
+    });
+
+    await prisma.refreshToken.delete({ where: { token: oldToken } });
+    await prisma.refreshToken.create({
+      data: {
+        token: newRefreshToken,
+        userId: findOldToken?.userId,
+        expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days
+      },
+    });
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true, // Set to 'true' in production
+      maxAge: 60 * 24 * 60 * 30 * 1000, // 60 days
+    });
+
+    res
+      .status(200)
+      .json({
+        message: "Refresh token received",
+        accessToken: newAccessToken,
+        user,
+      });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
 };
